@@ -1,0 +1,69 @@
+version: "3.5"
+
+volumes:
+  postgres-data:
+  redis-data:
+
+networks:
+  default:
+    external:
+      name: tryspecter
+
+services:
+  postgres:
+    image: postgres
+    env_file:
+      - ./envs/postgres.env
+    container_name: postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: always
+
+  redis:
+    image: redis:5
+    container_name: redis
+    volumes: 
+      - redis-data:/data
+    ports:
+      - 6379:6379
+    restart: always
+  
+  app:
+    build:
+      context: .
+    command: ['make', 'dev_server']
+    env_file:
+      - ./envs/app.env
+      - ./envs/worker.env
+    environment:
+      REDIS_ENDPOINT: redis://redis:6379
+      DB_NAME: tryspecter
+    restart: always
+    container_name: app
+    volumes:
+      - /opt/node_modules
+      - ./:/opt
+    depends_on:
+      - postgres
+      - redis
+
+  worker:
+    build:
+      context: .
+    command: ['make', 'dev_worker']
+    env_file:
+      - ./envs/app.env
+      - ./envs/worker.env
+    environment:
+      REDIS_ENDPOINT: redis://redis:6379
+      DB_NAME: tryspecter
+    restart: always
+    container_name: worker
+    volumes:
+      - /opt/node_modules
+      - ./:/opt
+    depends_on:
+      - postgres
+      - redis
