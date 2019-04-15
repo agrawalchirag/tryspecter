@@ -64,6 +64,15 @@ const config = convict({
     },
   },
 
+  url: {
+    linkedinLoginUrl: {
+      doc: "linkedin login url",
+      format: String,
+      default: "",
+      env: "LINKEDIN_LOGIN_URL"
+    }
+  },
+
   queue: {
     getUrlQueueName: {
       doc: "Get Url queue name",
