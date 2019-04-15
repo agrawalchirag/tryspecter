@@ -1,11 +1,10 @@
-const puppeteer = require("puppeteer");
+const { getBrowser } = require("./puppeteer");
+const { config } = require("../config/app");
 
-require('dotenv').config();
+require("dotenv").config();
 
-const { pathToExtension } = require("../utility");
-
-const {config} = require("../config/app");
 const user_agent = config.get("user.userAgent");
+const linkedinLoginUrl = config.get("url.linkedinLoginUrl");
 
 const getLinkedinData = async (linkedinUrl) => {
   let updatedLinkedUrl = null;
@@ -15,19 +14,12 @@ const getLinkedinData = async (linkedinUrl) => {
     updatedLinkedUrl = `${linkedinUrl}/about`;
   }
 
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: [
-      `--disable-extensions-except=${pathToExtension}`,
-      `--load-extension=${pathToExtension}`,
-      "--no-sandbox",
-    ],
-  });
+  const { browser } = await getBrowser();
 
   const page = await browser.newPage();
   await page.setUserAgent(user_agent);
 
-  await page.goto("https:/www.linkedin.com/login", {
+  await page.goto(linkedinLoginUrl, {
     waitUntil: "networkidle0",
   });
 
@@ -76,7 +68,13 @@ const getLinkedinData = async (linkedinUrl) => {
     .split("\n")[0];
 
   await browser.close();
-  return { industryType, companySize, linkedinEmp, timestamp: +new Date(), error: null };
+  return {
+    industryType,
+    companySize,
+    linkedinEmp,
+    timestamp: +new Date(),
+    error: null,
+  };
 };
 
 module.exports = { getLinkedinData };
